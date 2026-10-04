@@ -1,0 +1,823 @@
+name: Build BYSG dylib
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['classement.*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Ecrire chrono.html (1/4)
+        run: |
+          cat > chrono.html <<'BYSG_HTML_END'
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+          <title>Chrono</title>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Roboto+Condensed:wght@700&family=Roboto+Mono:wght@500&family=Roboto+Slab:wght@700&family=Roboto:wght@400;500;700&display=swap">
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+          <style>
+          :root{--bg:#fafaf9;--sf:#fff;--sub:#f2f1ef;--t1:#181715;--t3:#8b8986;--bd:rgba(0,0,0,.1);--bs:rgba(0,0,0,.06);--ac:#1c1c1f;--off:rgba(120,120,128,.3);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+          @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0d0f;--sf:#151518;--sub:#1e1e23;--t1:#edece9;--t3:#7a7874;--bd:rgba(255,255,255,.1);--bs:rgba(255,255,255,.06);--ac:#8b7cf0}}
+          :root[data-theme="dark"]{--bg:#0d0d0f;--sf:#151518;--sub:#1e1e23;--t1:#edece9;--t3:#7a7874;--bd:rgba(255,255,255,.1);--bs:rgba(255,255,255,.06);--ac:#8b7cf0}
+          *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+          html,body{height:100%;background:transparent;pointer-events:none}
+          input,textarea{user-select:text;-webkit-user-select:text}
+          body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:transparent;color:var(--t1);overflow:hidden;-webkit-text-size-adjust:100%}
+          #w{pointer-events:auto;outline:none;width:max-content;height:max-content;display:flex;flex-direction:column;align-items:center;-webkit-touch-callout:none;position:fixed;transform-origin:top left;cursor:grab;touch-action:none;z-index:2147483600}
+          #w.d,#tw.d{cursor:grabbing}
+          #tw{pointer-events:auto;position:fixed;display:none;width:max-content;height:max-content;touch-action:none;cursor:grab;-webkit-touch-callout:none;z-index:2147483600}
+          #chrono{display:none;gap:3px}
+          .tb{width:85px;height:60px;background:#000;border-radius:18px;display:flex;justify-content:center;align-items:center;color:#fff;font-size:37px;font-weight:300;font-family:Inter,monospace;letter-spacing:1.6px}
+          .tb.lb{width:95px;letter-spacing:.4px;font-size:30px}
+          #ls{display:flex;align-items:center;justify-content:flex-end;padding:0 10px;background:transparent}
+          #dg{font-family:"Century Gothic",Calibri,"Segoe UI",Arial,sans-serif;font-weight:700;font-size:43.75px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;filter:drop-shadow(1px 1px 0 rgba(0,0,0,.5)) drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+          #ls.ns #dg{filter:none}
+          #tx{display:none;text-align:center}
+          #tbx{display:inline-block;line-height:1.2;padding:4px 8px}
+          #tt{display:inline-block;white-space:pre;text-align:center}
+          .rb{background:linear-gradient(90deg,#f33,#fc3,#3f6,#3cf,#93f,#f33);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+          @keyframes rb{to{background-position:200% 0}}@keyframes float{50%{transform:translateY(-10px)}}@keyframes pulse{50%{transform:scale(1.15)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes bounce{50%{transform:translateY(-20px)}}@keyframes blink{50%{opacity:.1}}@keyframes sway{0%,100%{transform:translateX(-30px)}50%{transform:translateX(30px)}}
+          @keyframes fi{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+          @keyframes pin{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
+
+          #pop{pointer-events:auto;position:fixed;top:0;left:0;right:0;bottom:0;margin:auto;width:min(320px,92vw);height:min(560px,84vh);display:none;flex-direction:column;border-radius:20px;overflow:hidden;background:var(--sf);border:1px solid var(--bs);box-shadow:0 24px 60px rgba(0,0,0,.28);z-index:2147483647}
+          #pop.o{display:flex;animation:pin .32s cubic-bezier(.2,.9,.3,1.1)}
+          #pop.kb{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 8px);height:min(330px,46vh)}
+          .ph{flex:none;display:flex;align-items:center;gap:8px;padding:14px 12px 4px 18px}
+          .ph h3{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+          .ph .by{margin-right:auto;font-size:.68rem;font-weight:600;color:var(--t3);letter-spacing:.05em}
+          .ph button{background:0;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--t3);width:34px;height:34px;border-radius:50%}
+          .tabs{flex:none;position:relative;display:flex;gap:2px;padding:6px 12px 10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+          .tabs::-webkit-scrollbar{display:none}
+          .tab{flex:none;border:0;background:none;color:var(--t3);font:600 .76rem Inter,sans-serif;padding:8px 13px;border-radius:99px;cursor:pointer;touch-action:manipulation;transition:background .2s,color .2s}
+          .tab.on{background:var(--sub);color:var(--t1)}
+          .pc{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 14px 18px}
+          .tp{display:none}.tp.on{display:block;animation:fi .28s ease}
+          #pch,#pls,#sx,#rc,#pe,#bxo,#sko,#tso,#spc{animation:fi .28s ease}
+          .sc{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:18px 4px 8px}
+          .tp>.sc:first-child,#pls>.sc:first-child{margin-top:12px}
+          .card{background:var(--bg);border:1px solid var(--bs);border-radius:14px;padding:0 14px;margin-bottom:10px}
+          .it{padding:14px 0;border-top:1px solid var(--bs)}
+          .card>.it:first-child{border-top:0}
+          .it>label{display:block;font-size:.78rem;font-weight:500;margin-bottom:10px}
+          .it>label .v{float:right;color:var(--t3);font-weight:500;font-variant-numeric:tabular-nums}
+          .it.trw{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.8rem;font-weight:500;padding:12px 0}
+          .it input[type=range]:not(.hu){-webkit-appearance:none;appearance:none;display:block;width:100%;height:4px;border-radius:99px;background:var(--off);outline:none}
+          .it input[type=range]:not(.hu)::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.14);box-shadow:0 1px 5px rgba(0,0,0,.28)}
+          .tg{flex:none;width:46px;height:28px;padding:0;border:0;border-radius:99px;background:var(--off);position:relative;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none;transition:background .22s}
+          .tg::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .22s cubic-bezier(.3,.9,.3,1.1)}
+          .tg[aria-pressed=true]{background:var(--ac)}.tg[aria-pressed=true]::after{transform:translateX(18px)}
+          .chs{display:flex;flex-wrap:wrap;gap:6px}
+          .ch,.bt{flex:1 1 auto;padding:9px 11px;border-radius:99px;border:0;background:var(--sub);color:var(--t1);font:600 .74rem Inter,sans-serif;text-align:center;cursor:pointer;touch-action:manipulation;transition:background .2s,color .2s,transform .12s}
+          .ch:active,.bt:active{transform:scale(.96)}
+          .ch.on{background:var(--ac);color:#fff}
+          .ch small{display:block;font-weight:500;opacity:.6;font-size:.62rem;margin-top:2px}
+          .cs{width:100%;height:34px;border:1px solid var(--bd);border-radius:9px;color:#fff;text-shadow:0 0 3px #000;font:600 .72rem Inter,monospace;cursor:pointer}
+          .cb{display:none;padding-top:10px}.cp.o .cb{display:block}
+          .sv{position:relative;height:110px;border-radius:9px;touch-action:none;cursor:crosshair}
+          .sv i{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5);pointer-events:none}
+          .hu{margin-top:12px;height:14px;border-radius:7px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,red,#ff0,#0f0,#0ff,#00f,#f0f,red)}
+          .hu::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.4)}
+          .ta,.ni{width:100%;min-width:0;background:var(--sub);border:1px solid transparent;border-radius:11px;color:var(--t1);font:500 16px/1.35 Inter,sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+          .ta{height:44px;padding:11px 13px;resize:none;display:block}
+          .ni{padding:10px 12px;text-align:center}
+          .ta:focus,.ni:focus{border-color:var(--ac)}
+          .rcs{display:flex;align-items:center;gap:10px;color:var(--t3)}
+          .stt{font-size:.7rem;line-height:1.5;color:var(--t3);padding:2px 2px 14px}
+          .stt.in{padding:0 2px 12px}
+          .rki{display:block;width:100%;height:auto;border-radius:10px}
+          .rkm{padding:30px 0;text-align:center;color:var(--t3);font-size:.78rem}
+          .ft{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px 12px 18px;border-top:1px solid var(--bs);font-size:.68rem;font-weight:500;color:var(--t3)}
+          .dcb{flex:none;padding:8px 14px;border:0;border-radius:99px;background:#5865F2;color:#fff;font:600 .72rem Inter,sans-serif;cursor:pointer;touch-action:manipulation;transition:transform .12s}
+          .dcb:active{transform:scale(.96)}
+          #sp{pointer-events:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translate(-50%,-160%) scale(.92);opacity:0;z-index:2147483646;background:#000;color:rgba(255,255,255,.78);font:500 12px/1 Inter,'Segoe UI',Arial,sans-serif;letter-spacing:.02em;padding:9px 16px;border-radius:99px;border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap}
+          #sp b{color:#fff;font-weight:600}
+          #sp.in{animation:spin .6s cubic-bezier(.2,.9,.3,1.15) forwards}
+          #sp.out{animation:spout .45s cubic-bezier(.5,0,.8,.4) forwards}
+          @keyframes spin{from{opacity:0;transform:translate(-50%,-160%) scale(.92)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+          @keyframes spout{from{opacity:1;transform:translate(-50%,0) scale(1)}to{opacity:0;transform:translate(-50%,-160%) scale(.92)}}
+          #ios{display:none;position:relative;width:235px;height:118px;border-radius:10px;color:#fff;background:#000;touch-action:none;-webkit-touch-callout:none}
+          .ib{position:absolute;margin:0;padding:0;border:0;background:none;color:inherit;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:pointer;-webkit-appearance:none;appearance:none}
+          .ib::before{content:"";position:absolute;top:-8px;left:-8px;right:-8px;bottom:-8px}
+          #iset{left:195px;top:7px;width:33px;height:25px;border-radius:7px;background:var(--ib,rgba(255,255,255,.18))}
+          #irs{left:32px;top:78px;width:56px;height:40px}
+          #itg{left:146px;top:78px;width:56px;height:40px}
+          #ids,#iom{white-space:nowrap;line-height:1;font-variant-numeric:tabular-nums;pointer-events:none}
+          #ids{position:absolute;left:0;top:28px;width:100%;height:50px;display:flex;align-items:center;justify-content:center}
+          #iom{position:absolute;left:0;top:0;visibility:hidden}
+          .ic{display:inline-block;text-align:center}.ic.co{width:.42em}.ic.dt{width:.3em}
+          .bd .ic.co{width:.46em;color:transparent;position:relative}.bd .ic.dt{color:transparent;position:relative}
+          .bd .co::before,.bd .co::after,.bd .dt::after{content:"";position:absolute;left:50%;width:.15em;height:.15em;margin-left:-.075em;background:var(--itc,#fff);transform:rotate(45deg)}
+          .bd .co::before{top:.34em}.bd .co::after{top:.64em}.bd .dt::after{top:.66em}
+          @keyframes iro{from{transform:translateY(.55em);opacity:0}to{transform:none;opacity:1}}
+          @keyframes ifa{from{opacity:0}to{opacity:1}}
+          @keyframes izo{from{transform:scale(1.6);opacity:0}to{transform:none;opacity:1}}
+          #pop.ios{top:auto;bottom:0;margin:0;width:100%;height:min(58vh,580px);border-radius:28px 28px 0 0;background:#1c1c20;border:0;box-shadow:0 -10px 40px rgba(0,0,0,.45);color:#fff;font-family:Roboto,'Segoe UI',Inter,Arial,sans-serif;padding-bottom:env(safe-area-inset-bottom,0px)}
+          #pop.ios.o{animation:ishow .3s cubic-bezier(.2,.9,.3,1)}
+          @keyframes ishow{from{transform:translateY(100%)}to{transform:none}}
+          #pop.ios #x{flex:none;display:block;width:100%;height:30px;border:0;background:none;position:relative;padding:0;border-radius:0}
+          #pop.ios #x::after{content:"";position:absolute;left:50%;top:12px;width:56px;height:5px;margin-left:-28px;border-radius:3px;background:#6d6d72}
+          #pop.ios .ipc{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:6px 20px 28px}
+          #pop.ios .ig{background:#232328;border-radius:7px;overflow:hidden}
+          #pop.ios .irw{display:flex;align-items:center;justify-content:space-between;min-height:54px;padding:0 14px;font-size:19px;color:#5cb8d1}
+          #pop.ios .irh{cursor:pointer}
+          #pop.ios .irl{color:#fff;font-size:16px}#pop.ios .irl .v{color:#9a9aa0;font-variant-numeric:tabular-nums}
+          #pop.ios .sw{display:flex;align-items:center;gap:12px}
+          #pop.ios .cs{width:30px;height:30px;border:0;border-radius:50%;padding:0;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+          #pop.ios .chv{display:block;width:9px;height:9px;border-top:2.5px solid #fff;border-right:2.5px solid #fff;transform:rotate(45deg);margin:0 6px 0 0;transition:transform .2s}
+          #pop.ios .cp.o .chv{transform:rotate(135deg)}
+          #pop.ios .cb{padding:2px 14px 16px}
+          #pop.ios .tg{width:52px;height:30px;background:#3a3a3f}
+          #pop.ios .tg::after{top:3px;left:3px;width:24px;height:24px;background:#8d8d93}
+          #pop.ios .tg[aria-pressed=true]{background:#2f4f58}
+          #pop.ios .tg[aria-pressed=true]::after{background:#5ec7dc;transform:translateX(22px)}
+          #pop.ios .ist{font-size:19px;font-weight:700;margin:26px 0 12px 7px}
+          #pop.ios .isl{-webkit-appearance:none;appearance:none;display:block;width:calc(100% - 28px);margin:2px 14px 22px;height:4px;border-radius:99px;background:#3d3d43;outline:none}
+          #pop.ios .isl::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#5ec7dc;border:0}
+          #pop.ios .chs{flex-wrap:nowrap;overflow-x:auto;gap:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -20px;padding:0 20px 2px}
+          #pop.ios .chs::-webkit-scrollbar{display:none}
+          BYSG_HTML_END
+      - name: Ecrire chrono.html (2/4)
+        run: |
+          cat >> chrono.html <<'BYSG_HTML_END'
+          #pop.ios .ch{flex:none;width:127px;height:84px;border-radius:12px;border:1px solid #47474c;background:#28282c;color:#fff;font:700 32px/1 'Roboto Condensed',Roboto,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0}
+          #pop.ios .ch.on{background:#44666f;border-color:#44666f}
+          #pop.ios .ch.f{background:#232328;border-color:transparent;height:72px;width:140px;font-size:30px}
+          #pop.ios .ch.f.on{background:#44666f}
+          #pop.ios .ch.m{font:600 18px/1 Roboto,Arial,sans-serif;height:64px}
+          #pop.ios .ch small{font:500 11px/1 Roboto,Arial,sans-serif;opacity:.6;margin:0}
+          .rl{position:relative}.rl em{font-style:normal;color:#7d8d93}.rl sub{position:absolute;left:55%;bottom:-2px;font-size:7px;color:#7d8d93}
+          </style>
+          </head>
+          <body>
+          <div id="w">
+            <div id="ios"><button type="button" class="ib" id="iset" data-ia="set" aria-label="Settings"><svg width="20" height="16" viewBox="0 0 20 16"><rect x="1.5" y="1.5" width="17" height="13" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9.5" y="8" width="7" height="4.5" rx="1" fill="currentColor"/><path d="M4.6 7.4 7.6 4.4M4.6 4.4h3v3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div id="ids"></div><div id="iom"></div><button type="button" class="ib" id="irs" data-ia="rst" aria-label="Reset"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M6.1 6.1A8.4 8.4 0 1 0 12 3.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.8 .9 11.8 3.6 14.8 6.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="ib" id="itg" data-ia="tog" aria-label="Start / Pause"></button></div>
+            <div id="chrono"><div class="tb" id="h">00</div><div class="tb" id="m">00</div><div class="tb" id="s">00</div></div>
+            <div id="ls"><div id="dg"><span id="dm">0</span><span id="dc">.00</span></div></div>
+            <div id="tx"><span id="tbx"><span id="tt"></span></span></div>
+          </div>
+          <div id="tw"></div>
+          <div id="sp">Timer made by <b>SG @sg9fex</b></div>
+          <div id="pop"></div>
+          <script>
+          const $=i=>document.getElementById(i),p2=n=>String(n).padStart(2,'0'),esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+          /* image du classement : fichier classement.png (ou jpg, jpeg, webp) à la racine du dépôt GitHub */
+          const RANK='https://raw.githubusercontent.com/${{ github.repository }}/main/classement.';
+          const S={mode:'livesplit',op:100,size:60,bg:'#000000',lab:0,gl:0,x:40,y:100,
+          txt:'BYSG',txOn:0,glue:1,ox:60,oy:220,tsz:48,tdo:100,tcol:'#ffffff',tfx:'glow',tan:'float',tsp:50,tb:1,tbg:'none',tbc:'#000000',tbo:75,tsk:0,tskc:'#000000',
+          str:0,sp:100,res:'1440x1080',rx:1440,ry:1080,gray:0,spm:'1',spc:'1.5',
+          ith:1,ilive:1,icol:'#ffffff',ibg:'#000000',isz:100,ian:'roll',ifont:'serif',
+          lop:100,lsz:100,lw:252,lh:50,lbg:'#000000',lbgOn:0,acc:'.23',dec:35,grad:1,sh:1,run:'#29cc54',idle:'#7a7a7a',pau:'#16a6ff'};
+          try{Object.assign(S,JSON.parse(localStorage.getItem('bysgSettings2')||'{}'))}catch(e){}
+          if(S.mode==='text'){S.mode='none';S.txOn=1}
+          let sT=0;const save=()=>{clearTimeout(sT);sT=setTimeout(()=>{try{localStorage.setItem('bysgSettings2',JSON.stringify(S))}catch(e){}},250)};
+          let BG='';try{BG=localStorage.getItem('bysgBg')||''}catch(e){}
+          let pend=0;const go=()=>{if(pend)return;pend=1;requestAnimationFrame(()=>{pend=0;apply()})};
+          let K=1,el=0,st='stopped',t0=0,raf=0;
+          const w=$('w');
+          /* dégradé du texte (même formule HSV que l'original) */
+          function hsv(h,s,v){const c=v*s,x=c*(1-Math.abs(h/60%2-1)),m=v-c,r=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];return'rgb('+r.map(a=>Math.round(255*(a+m))).join()+')'}
+          function grad(hx){const r=parseInt(hx.slice(1,3),16)/255,g=parseInt(hx.slice(3,5),16)/255,b=parseInt(hx.slice(5,7),16)/255,mx=Math.max(r,g,b),d=mx-Math.min(r,g,b);let h=0;if(d){h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}const s=mx?d/mx:0;return'linear-gradient(180deg,'+hsv(h,.5*s,Math.min(1,1.5*mx+.1))+','+hsv(h,s,.8*mx)+')'}
+          function render(){renderIos();
+            const t=Math.floor(el/1000),s=t%60,m=Math.floor(t/60)%60,h=Math.floor(t/3600);
+            $('h').textContent=p2(h)+(S.lab?'h':'');$('m').textContent=p2(m)+(S.lab?'m':'');$('s').textContent=p2(s)+(S.lab?'s':'');
+            $('dm').textContent=h?h+':'+p2(m)+':'+p2(s):m?m+':'+p2(s):String(s);
+            $('dc').textContent=S.acc==='.234'?'.'+String(Math.floor(el)%1000).padStart(3,'0'):S.acc==='.23'?'.'+p2(Math.floor(el/10)%100):S.acc==='.2'?'.'+Math.floor(el/100)%10:'';
+          }
+          function paint(){
+            const col=st==='running'?S.run:st==='paused'?S.pau:S.idle,d=$('dg').style;
+            if(S.grad){d.background=grad(col);d.webkitBackgroundClip=d.backgroundClip='text';d.webkitTextFillColor='transparent';d.color='transparent'}
+            else{d.background='none';d.webkitBackgroundClip=d.backgroundClip='initial';d.webkitTextFillColor='initial';d.color=col}
+          }
+          function tick(){if(st==='running'){el=performance.now()-t0;render();raf=requestAnimationFrame(tick)}}
+          function toggle(){
+            if(st==='running'){cancelAnimationFrame(raf);el=performance.now()-t0;st='paused'}
+            else{t0=performance.now()-el;st='running';raf=requestAnimationFrame(tick)}
+            paint();render();
+          }
+          function reset(){cancelAnimationFrame(raf);el=0;st='stopped';paint();render()}
+          /* résolution choisie (clamp) et vitesse effective */
+          function resv(){let a,b;if(S.res==='custom'){a=+S.rx;b=+S.ry}else{[a,b]=String(S.res).split('x').map(Number)}return[Math.min(8000,Math.max(200,a||1440)),Math.min(8000,Math.max(200,b||1080))]}
+          function spdv(){return S.spm==='custom'?Math.min(10,Math.max(.1,parseFloat(S.spc)||1)):(+S.spm||1)}
+          function inf(){const e=$('si');if(!e)return;const d=window.NS||window.devicePixelRatio||1,a=Math.round(Math.max(innerWidth,innerHeight)*d),b=Math.round(Math.max(1,Math.min(innerWidth,innerHeight))*d),r=resv(),L=Math.max(r[0],r[1]),H=Math.min(r[0],r[1]),k=Math.min(1,a/L,b/H);e.textContent=t('si1')+' '+a+'×'+b+' · '+t('si2')+' '+Math.round(L*k)+'×'+Math.round(H*k)+(k<1?' · '+t('si3'):'')}
+          function hexa(h,a){return'rgba('+parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16)+','+a+')'}
+          function apply(){
+            if(S.mode==='none'&&!S.txOn)S.txOn=1;
+            const c=S.mode==='chrono',tx=$('tx'),tw=$('tw'),par=S.glue?w:tw;
+            if(tx.parentNode!==par)par.appendChild(tx);
+            w.style.left=S.x+'px';w.style.top=S.y+'px';w.style.opacity=1;$('chrono').style.opacity=S.op/100;$('ls').style.opacity=S.lop/100;tx.style.opacity=S.tdo/100;
+            w.style.transform='scale('+(K=c?S.size/85:S.mode==='livesplit'?S.lsz/100:S.mode==='ios'?S.isz/100:1)+')';
+            $('ios').style.display=S.mode==='ios'?'block':'none';$('chrono').style.display=c?'flex':'none';$('ls').style.display=S.mode==='livesplit'?'flex':'none';tx.style.display=S.txOn?'block':'none';
+            tw.style.display=(!S.glue&&S.txOn)?'block':'none';tw.style.left=S.ox+'px';tw.style.top=S.oy+'px';
+            const rr=parseInt(S.bg.slice(1,3),16),gg=parseInt(S.bg.slice(3,5),16),bb=parseInt(S.bg.slice(5,7),16),light=(.2126*rr+.7152*gg+.0722*bb)/255>.5;
+            document.querySelectorAll('.tb').forEach(b=>{
+              b.classList.toggle('lb',!!S.lab);const x=b.style;
+              if(S.gl){x.background='rgba(255,255,255,.08)';x.backdropFilter=x.webkitBackdropFilter='blur(16px)';x.border='1px solid rgba(255,255,255,.15)';x.color='#fff';x.fontWeight=300}
+              else{x.background=S.bg;x.backdropFilter=x.webkitBackdropFilter='none';x.border='none';x.color=light?'#000':'#fff';x.fontWeight=light?500:300}
+            });
+            const l=$('ls');l.style.width=S.lw+'px';l.style.height=S.lh+'px';l.style.background=S.lbgOn?S.lbg:'transparent';l.style.backgroundImage=BG?'url("'+BG+'")':'none';l.style.backgroundSize='cover';l.style.backgroundPosition='center';l.classList.toggle('ns',!S.sh);
+            $('dc').style.fontSize=.875*S.dec+'px';
+            paintTx();paint();paintIos();render();
+            if($('pch'))syn();
+            rep();
+            const rv=resv(),sk=(S.str?1:0)+':'+S.sp+':'+rv[0]+'x'+rv[1];if(lastS!==sk){lastS=sk;nat({s:S.str?1:0,p:S.sp,w:rv[0],h:rv[1]})}
+            if(lastG!==S.gray){lastG=S.gray;nat({g:S.gray?1:0})}
+            const sv=spdv();if(lastV!==sv){lastV=sv;nat({v:sv})}
+          }
+          /* affiche / masque les blocs selon les réglages */
+          function syn(){
+            const m=S.mode,sh=(i,v)=>{const e=$(i);if(e)e.style.display=v?'':'none'};
+            sh('pch',m==='chrono');sh('pls',m==='livesplit');sh('sx',S.str);sh('rc',S.res==='custom');sh('pe',S.txOn);sh('bxo',S.tbg!=='none');sh('sko',+S.tsk>0);sh('tso',S.tan!=='none');sh('spc',S.spm==='custom');
+            pop.querySelectorAll('.tg').forEach(b=>b.setAttribute('aria-pressed',S[b.dataset.k]?'true':'false'));
+            const v=$('spv2');if(v)v.textContent=String(spdv()).replace('.',',')+'×';
+            inf();
+          }
+          function setBg(u){BG=u;try{u?localStorage.setItem('bysgBg',u):localStorage.removeItem('bysgBg')}catch(e){}apply()}
+          const nat=m=>{try{webkit.messageHandlers.n.postMessage(m);return 1}catch(e){return 0}};
+          let lastS='',lastG=-1,lastV=-1;
+          /* choisir une photo : sélecteur natif iOS (le input file ne marche pas dans un overlay) */
+          function pickImg(){if(!nat({pk:1})){const f=$('bgf');if(f)f.click()}}
+          function openDc(){const u='https://discord.gg/fVyCHsutb';if(!nat({o:u}))window.open(u,'_blank')}
+          function bindExtra(){
+            const f=$('bgf');
+            if(f)f.onchange=e=>{const fl=e.target.files[0];if(!fl)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);setBg(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(fl);e.target.value=''};
+          }
+          /* zones cliquables envoyées à l'app native : le reste de l'écran laisse passer les touches vers le jeu */
+          let lastR='';
+          function rep(){try{let a;if(pop.classList.contains('o'))a=[[0,0,innerWidth,innerHeight]];else{a=[];const m=S.mode,wr=w.getBoundingClientRect(),e=m==='chrono'?$('chrono'):m==='ios'?$('ios'):m==='livesplit'?(S.lbgOn||BG?$('ls'):$('dg')):null;
+            if(e){const r=e.getBoundingClientRect();a.push([r.left,r.top,r.width,r.height])}
+            if(S.txOn){const q=$('tbx'),f=S.tan!=='none'?[30,22]:[0,0];
+              if(S.glue)a.push([wr.left+q.offsetLeft*K-f[0],wr.top+q.offsetTop*K-f[1],q.offsetWidth*K+2*f[0],q.offsetHeight*K+2*f[1]]);
+              else a.push([S.ox+q.offsetLeft-f[0],S.oy+q.offsetTop-f[1],q.offsetWidth+2*f[0],q.offsetHeight+2*f[1]])}}
+            const j=JSON.stringify(a);if(j===lastR)return;lastR=j;webkit.messageHandlers.r.postMessage(a)}catch(e){}}
+          addEventListener('resize',rep);
+          function paintTx(){
+            const tt=$('tt'),bx=$('tbx'),d=tt.style,f=S.tfx,c=S.tcol,kk=S.glue?K:1,sk=+S.tsk||0;
+            tt.textContent=S.txt||' ';tt.classList.toggle('rb',f==='rainbow');
+            d.fontSize=S.tsz/kk+'px';d.fontWeight=S.tb?700:400;d.color=f==='outline'?'transparent':c;
+            d.webkitTextStroke=f==='outline'?'2px '+c:'0';
+            const sh=[];
+            if(sk>0)for(let i=0;i<16;i++){const a=i*Math.PI/8;sh.push((Math.round(Math.cos(a)*sk*100)/100)+'px '+(Math.round(Math.sin(a)*sk*100)/100)+'px 0 '+S.tskc)}
+            if(f==='glow')sh.push('0 0 8px '+c,'0 0 20px '+c);
+            else if(f==='neon')sh.push('0 0 3px #fff','0 0 10px '+c,'0 0 24px '+c,'0 0 48px '+c);
+            else if(f==='shadow')sh.push('3px 3px 0 rgba(0,0,0,.6)');
+            d.textShadow=sh.join(',')||'none';
+            d.animation=f==='rainbow'?'rb 3s linear infinite':'';
+            const b=S.tbg,s=bx.style,z=S.tsz/kk;
+            s.background=b==='none'?'transparent':hexa(S.tbc,S.tbo/100);
+            s.borderRadius=b==='round'?(.4*z)+'px':b==='pill'?'999px':'0';
+            s.padding=b==='none'?'4px 8px':(.18*z)+'px '+(.5*z)+'px';
+            s.animation=S.tan!=='none'?S.tan+' '+(110-S.tsp)/50+'s ease-in-out infinite':'';
+          }
+          /* sélecteur de couleur (carré saturation/luminosité + teinte) */
+          function h2x(h,s,v){const f=n=>{const k=(n+h/60)%6;return Math.round(255*(v-v*s*Math.max(0,Math.min(k,4-k,1)))).toString(16).padStart(2,'0')};return'#'+f(5)+f(3)+f(1)}
+          function x2h(x){const r=parseInt(x.slice(1,3),16)/255,g=parseInt(x.slice(3,5),16)/255,b=parseInt(x.slice(5,7),16)/255,m=Math.max(r,g,b),d=m-Math.min(r,g,b);let h=0;if(d){h=m===r?(g-b)/d+(g<b?6:0):m===g?(b-r)/d+2:(r-g)/d+4;h*=60}return[h,m?d/m:0,m]}
+          function initCp(){pop.querySelectorAll('.cp').forEach(p=>{
+            const k=p.dataset.k,sw=p.querySelector('.cs'),sv=p.querySelector('.sv'),dot=sv.firstChild,hu=p.querySelector('.hu');
+            let[H,Sa,V]=x2h(S[k]);if(!Sa)H=0;hu.value=H;
+            const ui=()=>{sv.style.background=`linear-gradient(rgba(0,0,0,0),#000),linear-gradient(90deg,#fff,hsl(${H},100%,50%))`;dot.style.left=Sa*100+'%';dot.style.top=(1-V)*100+'%';sw.style.background=S[k]};
+            const set=()=>{S[k]=h2x(H,Sa,V);if(k==='icol'||k==='ibg'){S.ith=0;const q=pop.querySelector('.tg[data-k="ith"]');if(q)q.setAttribute('aria-pressed','false')}ui();go();save()};
+            const mv=e=>{const r=sv.getBoundingClientRect();Sa=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));V=1-Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));set()};
+            sv.onpointerdown=e=>{sv.setPointerCapture(e.pointerId);sv.onpointermove=mv;mv(e)};
+            sv.onpointerup=sv.onpointercancel=()=>sv.onpointermove=null;
+            hu.oninput=()=>{H=+hu.value;set()};
+            sw.onclick=()=>p.classList.toggle('o');
+            ui()})}
+          /* déplacement (timer et texte détaché), clic, double clic, appui long */
+          let iaT=null,drag=null,dragT='w',moved=false,lp=0,tap=0,sx=0,sy=0,seen=false;
+          function down(e,k){
+            if(e.button===2||pop.classList.contains('o'))return;seen=true;e.preventDefault();dragT=k;iaT=e.target.closest?e.target.closest('[data-ia]'):null;
+            const n=k==='w'?w:$('tw'),r=n.getBoundingClientRect();
+            drag={dx:e.clientX-r.left,dy:e.clientY-r.top};sx=e.clientX;sy=e.clientY;moved=false;n.classList.add('d');
+            lp=setTimeout(()=>{if(!moved&&S.mode!=='ios'){drag=null;n.classList.remove('d');openPop()}},600);
+          }
+          w.addEventListener('pointerdown',e=>down(e,'w'));
+          $('tw').addEventListener('pointerdown',e=>down(e,'t'));
+          addEventListener('pointermove',e=>{
+            if(!drag)return;
+            if(Math.hypot(e.clientX-sx,e.clientY-sy)>5){moved=true;clearTimeout(lp)}
+            if(!moved)return;
+          BYSG_HTML_END
+      - name: Ecrire chrono.html (3/4)
+        run: |
+          cat >> chrono.html <<'BYSG_HTML_END'
+            const isW=dragT==='w',n=isW?w:$('tw'),r=n.getBoundingClientRect(),
+            nx=Math.round(Math.max(40-r.width,Math.min(e.clientX-drag.dx,innerWidth-40))),
+            ny=Math.round(Math.max(40-r.height,Math.min(e.clientY-drag.dy,innerHeight-40)));
+            if(isW){S.x=nx;S.y=ny}else{S.ox=nx;S.oy=ny}
+            n.style.left=nx+'px';n.style.top=ny+'px';rep();
+          });
+          function doTap(){if(tap){clearTimeout(tap);tap=0;reset()}else tap=setTimeout(()=>{tap=0;toggle()},250)}
+          function endPtr(e){
+            clearTimeout(lp);if(!drag)return;
+            w.classList.remove('d');$('tw').classList.remove('d');
+            if(!moved&&dragT==='w'){if(S.mode==='ios'){const u=e&&e.type==='pointerup'&&e.target.closest?e.target.closest('[data-ia]'):null;if(u&&u===iaT)iosAct(u.dataset.ia)}else doTap()}
+            drag=null;save();
+          }
+          addEventListener('pointerup',endPtr);
+          addEventListener('pointercancel',endPtr);
+          w.addEventListener('click',e=>{if(seen){seen=false;return}if(S.mode==='ios'){const u=e.target.closest('[data-ia]');if(u)iosAct(u.dataset.ia);return}doTap()});
+          w.addEventListener('contextmenu',e=>{e.preventDefault();openPop()});
+          $('tw').addEventListener('contextmenu',e=>{e.preventDefault();openPop()});
+
+          /* ---------- textes ---------- */
+          const T={
+          title:'Réglages',close:'Fermer',
+          tTimer:'Timer',tScreen:'Écran',tText:'Texte',tSpeed:'Vitesse',tRank:'Classement',
+          style:'Style du timer',nom:'Texte seul',
+          op:'Opacité',size:'Taille',bg:'Couleur de fond',lab:'Afficher les unités (h, m, s)',gl:'Effet verre',w:'Largeur',h:'Hauteur',
+          bgon:'Afficher le fond',bgc:'Couleur du fond',bgimg:'Image de fond',pick:'Choisir une photo',rem:'Retirer',
+          acc:'Précision',none:'Aucune',nonem:'Aucun',t1:'Dixièmes',t2:'Centièmes',t3:'Millièmes',dec:'Taille des décimales',grad:'Dégradé du texte',sh:'Ombre du texte',
+          run:'Couleur en marche',idle:'Couleur à l’arrêt',pau:'Couleur en pause',gBg:'Fond',gNum:'Chiffres',gCol:'Couleurs',
+          st1:'Résolution étirée',res:'Résolution',cust:'Perso',custl:'Résolution personnalisée',rw:'Largeur',rh:'Hauteur',sp:'Intensité de l’étirement',gry:'Noir et blanc',
+          si1:'Écran',si2:'rendu',si3:'adapté',
+          txm:'Afficher le texte',glue:'Coller au timer',tc:'Texte',txph:'Écris ton texte…',presets:'Styles rapides',
+          p1:'Classique',p2:'Fond noir',p3:'Fond blanc',p4:'Contour',p5:'Néon',p6:'Arc-en-ciel',
+          gStyle:'Style',tcol:'Couleur',tb:'Gras',gFx:'Effets',tfx:'Effet',g1:'Lueur',g2:'Néon',g3:'Creux',g4:'Ombre',g5:'Arc-en-ciel',
+          tan:'Animation',a1:'Flottant',a2:'Pulsation',a3:'Tremblement',a4:'Rebond',a5:'Clignotement',a6:'Balancement',tsp:'Vitesse de l’animation',
+          gBox:'Arrière-plan',tbg:'Forme',bx1:'Carré',bx2:'Arrondi',bx3:'Pilule',tbc:'Couleur',tbo:'Opacité',
+          gOut:'Contour',tsk:'Épaisseur',tskc:'Couleur',
+          spd:'Vitesse du jeu',spcl:'Vitesse personnalisée',spnote:'Accélère ou ralentit le temps du jeu. 1× correspond à la vitesse normale. Valeur personnalisée entre 0,1 et 10.',
+          rknote:'Le classement se met à jour automatiquement.',rkld:'Chargement…',rkno:'Classement indisponible pour le moment.',
+          dc:'Rejoindre le Discord'};
+          const t=k=>T[k]||k;
+          const SUF={isz:'%',sp:'%',op:'%',lop:'%',tdo:'%',tbo:'%',size:'%',lsz:'%',lw:' px',lh:' px',tsz:' px',tsk:' px'};
+          const RW={
+          op:['r','op','op',20,100],size:['r','size','size',15,200],bg:['c','bg','bg'],lab:['t','lab','lab'],gl:['t','gl','gl'],
+          lop:['r','lop','op',20,100],lsz:['r','lsz','size',10,300],lw:['r','lw','w',120,600],lh:['r','lh','h',30,200],
+          lbgOn:['t','lbgOn','bgon'],lbg:['c','lbg','bgc'],bgimg:['p','','bgimg'],
+          acc:['s','acc','acc',[['','none'],['.2','t1'],['.23','t2'],['.234','t3']]],dec:['r','dec','dec',10,50],grad:['t','grad','grad'],sh:['t','sh','sh'],
+          run:['c','run','run'],idle:['c','idle','idle'],pau:['c','pau','pau'],
+          txt:['i','txt','tc'],tsz:['r','tsz','size',6,200],tdo:['r','tdo','op',20,100],tcol:['c','tcol','tcol'],tb:['t','tb','tb'],
+          tfx:['s','tfx','tfx',[['none','nonem'],['glow','g1'],['neon','g2'],['outline','g3'],['shadow','g4'],['rainbow','g5']]],
+          tan:['s','tan','tan',[['none','none'],['float','a1'],['pulse','a2'],['shake','a3'],['bounce','a4'],['blink','a5'],['sway','a6']]],
+          tsp:['r','tsp','tsp',10,100],
+          tbg:['s','tbg','tbg',[['none','nonem'],['box','bx1'],['round','bx2'],['pill','bx3']]],tbc:['c','tbc','tbc'],tbo:['r','tbo','tbo',0,100],
+          tsk:['r','tsk','tsk',0,8],tskc:['c','tskc','tskc'],
+          glue:['t','glue','glue'],txOn:['t','txOn','txm'],str:['t','str','st1'],gray:['t','gray','gry'],sp:['r','sp','sp',0,100]};
+          const row=([ty,k,l,a,b])=>{
+            if(ty==='p')return`<div class="it"><label>${t(l)}</label><div class="chs"><button type="button" class="bt" id="bgp">${t('pick')}</button><input type="file" accept="image/*" id="bgf" hidden><button type="button" class="bt" id="bgx">${t('rem')}</button></div></div>`;
+            if(ty==='t')return`<div class="it trw"><span>${t(l)}</span><button type="button" class="tg" data-k="${k}" aria-pressed="${S[k]?'true':'false'}" aria-label="${esc(t(l))}"></button></div>`;
+            if(ty==='r')return`<div class="it"><label>${t(l)}<span class="v" data-vf="${k}">${S[k]}${SUF[k]||''}</span></label><input type="range" data-k="${k}" min="${a}" max="${b}" value="${S[k]}"></div>`;
+            if(ty==='c')return`<div class="it"><label>${t(l)}</label><div class="cp" data-k="${k}"><button type="button" class="cs"></button><div class="cb"><div class="sv"><i></i></div><input type="range" class="hu" min="0" max="360" value="0"></div></div></div>`;
+            if(ty==='i')return`<div class="it"><label>${t(l)}</label><textarea class="ta" data-k="${k}" rows="1" maxlength="120" placeholder="${esc(t('txph'))}">${esc(S[k])}</textarea></div>`;
+            return`<div class="it"><label>${t(l)}</label><div class="chs" data-k="${k}">${a.map(o=>`<button type="button" class="ch${S[k]===o[0]?' on':''}" data-v="${o[0]}">${t(o[1])}</button>`).join('')}</div></div>`;
+          };
+          const rs=ks=>ks.map(k=>row(RW[k])).join('');
+          const card=ks=>`<div class="card">${rs(ks)}</div>`;
+          const RES=[['1440x1080','4:3'],['1280x960','4:3'],['1024x768','4:3'],['1280x1024','5:4'],['1680x1050','16:10'],['1920x1080','16:9']];
+          const resHtml=()=>`<div class="it"><label>${t('res')}</label><div class="chs" data-k="res">${RES.map(o=>`<button type="button" class="ch${S.res===o[0]?' on':''}" data-v="${o[0]}">${o[0].replace('x','×')}<small>${o[1]}</small></button>`).join('')}<button type="button" class="ch${S.res==='custom'?' on':''}" data-v="custom">${t('cust')}</button></div></div><div class="it" id="rc"><label>${t('custl')}</label><div class="rcs"><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="ni" data-k="rx" value="${S.rx}" placeholder="${t('rw')}" aria-label="${t('rw')}"><span>×</span><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="ni" data-k="ry" value="${S.ry}" placeholder="${t('rh')}" aria-label="${t('rh')}"></div></div>`;
+          const SPD=[['0.5','0,5×'],['1','1×'],['2','2×'],['3','3×']];
+          const PRE=[
+          {n:'p1',v:{tcol:'#ffffff',tfx:'none',tbg:'none',tsk:0}},
+          {n:'p2',v:{tcol:'#ffffff',tfx:'none',tbg:'pill',tbc:'#000000',tbo:78,tsk:0}},
+          {n:'p3',v:{tcol:'#111111',tfx:'none',tbg:'round',tbc:'#ffffff',tbo:92,tsk:0}},
+          {n:'p4',v:{tcol:'#ffffff',tfx:'none',tbg:'none',tsk:3,tskc:'#000000'}},
+          {n:'p5',v:{tcol:'#ff4fd8',tfx:'neon',tbg:'none',tsk:0}},
+          {n:'p6',v:{tcol:'#ffffff',tfx:'rainbow',tbg:'pill',tbc:'#000000',tbo:70,tsk:0}}];
+          const TABS=[['timer','tTimer'],['screen','tScreen'],['text','tText'],['speed','tSpeed'],['rank','tRank']];
+          function body(){return`
+          <div class="tp" data-tp="timer">
+            <div class="card"><div class="it"><label>${t('style')}</label><div class="chs" data-k="mode">${['chrono','livesplit','ios','none'].map(v=>`<button type="button" class="ch${S.mode===v?' on':''}" data-v="${v}">${v==='none'?t('nom'):v==='chrono'?'Chrono':v==='ios'?'iOS Timer':'LiveSplit'}</button>`).join('')}</div></div></div>
+            <div id="pch">${card(['op','size','bg','lab','gl'])}</div>
+            <div id="pls">${card(['lop','lsz','lw','lh'])}<div class="sc">${t('gBg')}</div>${card(['lbgOn','lbg','bgimg'])}<div class="sc">${t('gNum')}</div>${card(['acc','dec','grad','sh'])}<div class="sc">${t('gCol')}</div>${card(['run','idle','pau'])}</div>
+          </div>
+          <div class="tp" data-tp="screen">
+            <div class="card">${rs(['str'])}<div id="sx">${resHtml()}${rs(['sp'])}<div class="stt in" id="si"></div></div></div>
+            ${card(['gray'])}
+          </div>
+          <div class="tp" data-tp="text">
+            ${card(['txOn'])}
+            <div id="pe">
+              <div class="card">${rs(['glue','txt'])}</div>
+              <div class="sc">${t('presets')}</div>
+              <div class="card"><div class="it"><div class="chs">${PRE.map((p,i)=>`<button type="button" class="ch pr" data-p="${i}">${t(p.n)}</button>`).join('')}</div></div></div>
+              <div class="sc">${t('gStyle')}</div>${card(['tsz','tdo','tcol','tb'])}
+              <div class="sc">${t('gFx')}</div><div class="card">${rs(['tfx','tan'])}<div id="tso">${rs(['tsp'])}</div></div>
+              <div class="sc">${t('gBox')}</div><div class="card">${rs(['tbg'])}<div id="bxo">${rs(['tbc','tbo'])}</div></div>
+              <div class="sc">${t('gOut')}</div><div class="card">${rs(['tsk'])}<div id="sko">${rs(['tskc'])}</div></div>
+            </div>
+          </div>
+          <div class="tp" data-tp="speed">
+            <div class="card"><div class="it"><label>${t('spd')}<span class="v" id="spv2"></span></label><div class="chs" data-k="spm">${SPD.map(o=>`<button type="button" class="ch${S.spm===o[0]?' on':''}" data-v="${o[0]}">${o[1]}</button>`).join('')}<button type="button" class="ch${S.spm==='custom'?' on':''}" data-v="custom">${t('cust')}</button></div></div>
+            <div class="it" id="spc"><label>${t('spcl')}</label><div class="rcs"><input type="text" inputmode="decimal" maxlength="5" class="ni" id="spci" value="${String(S.spc).replace('.',',')}" aria-label="${t('spcl')}"><span>×</span></div></div></div>
+            <div class="stt">${t('spnote')}</div>
+          </div>
+          <div class="tp" data-tp="rank">
+            <div class="card"><div class="it" style="padding:10px 0"><div id="rk"><div class="rkm">${t('rkld')}</div></div></div></div>
+            <div class="stt">${t('rknote')}</div>
+          </div>`}
+
+          /* ---------- fenêtre de réglages ---------- */
+          const pop=$('pop');let tab='timer';
+          function buildPop(){if(S.mode==='ios')return buildIos();pop.classList.remove('ios');
+            const old=pop.querySelector('.pc'),y=old?old.scrollTop:0;
+            pop.innerHTML=`<div class="ph"><h3>${t('title')}</h3><span class="by">by SG</span><button type="button" id="x" aria-label="${t('close')}">&times;</button></div><div class="tabs">${TABS.map(([k,l])=>`<button type="button" class="tab${tab===k?' on':''}" data-tab="${k}">${t(l)}</button>`).join('')}</div><div class="pc">${body()}</div><div class="ft"><span>Timer by SG @sg9fex</span><button type="button" class="dcb" id="dcl">${t('dc')}</button></div>`;
+            initCp();bindExtra();syn();
+            pop.querySelectorAll('.ta').forEach(a=>a.onfocus=()=>{if(a.value==='BYSG')setTimeout(()=>a.select(),0)});
+            showTab(tab,true);const n=pop.querySelector('.pc');if(n)n.scrollTop=y;
+          }
+          function fit(a){a.style.height='44px';a.style.height=Math.min(100,Math.max(44,a.scrollHeight+2))+'px'}
+          function showTab(k,keep){
+            tab=k;const sc=pop.querySelector('.pc');
+            pop.querySelectorAll('.tp').forEach(p=>p.classList.toggle('on',p.dataset.tp===k));
+            pop.querySelectorAll('.tab').forEach(b=>{const on=b.dataset.tab===k;b.classList.toggle('on',on);if(on){const q=b.parentNode;q.scrollLeft=b.offsetLeft-(q.clientWidth-b.offsetWidth)/2}});
+            if(!keep&&sc)sc.scrollTop=0;
+            if(k==='text')pop.querySelectorAll('.ta').forEach(fit);
+            if(k==='rank')loadRank();
+          }
+          /* classement : même image pour tout le monde (fichier du dépôt), rafraîchie chaque minute */
+          const EXT=['png','jpg','jpeg','webp'];
+          function loadRank(){const b=$('rk');if(b)tryRank(b,0)}
+          function tryRank(b,i){
+            if(i>=EXT.length){if(!b.querySelector('img'))b.innerHTML='<div class="rkm">'+t('rkno')+'</div>';return}
+            const im=new Image();im.className='rki';
+            im.onload=()=>{b.innerHTML='';b.appendChild(im)};
+            im.onerror=()=>tryRank(b,i+1);
+            im.src=RANK+EXT[i]+'?t='+Math.floor(Date.now()/60000);
+          }
+          setInterval(()=>{if(pop.classList.contains('o')&&tab==='rank')loadRank()},60000);
+          function openPop(){buildPop();pop.classList.remove('kb');pop.classList.add('o');rep()}
+          function closePop(){try{document.activeElement.blur()}catch(e){}pop.classList.remove('o');pop.classList.remove('kb');rep()}
+          /* champs numériques : on n'applique la valeur qu'à la validation (plus de saccades en tapant) */
+          function commitNum(a){
+            if(a.id==='spci'){let v=parseFloat(a.value.replace(',','.'));if(!(v>0))v=1;v=Math.min(10,Math.max(.1,v));S.spc=String(Math.round(v*100)/100);a.value=S.spc.replace('.',',')}
+            else{const k=a.dataset.k;let v=parseInt(a.value,10);if(!v)v=k==='rx'?1440:1080;v=Math.min(8000,Math.max(200,v));S[k]=v;a.value=v}
+            go();save();
+          }
+          pop.addEventListener('input',e=>{
+            const x=e.target;
+            if(x.classList.contains('ni')){x.value=x.value.replace(x.id==='spci'?/[^0-9.,]/g:/[^0-9]/g,'');return}
+            const k=x.dataset.k;if(!k)return;
+            S[k]=x.type==='range'?+x.value:x.value;
+            const v=pop.querySelector('[data-vf="'+k+'"]');if(v)v.textContent=S[k]+(SUF[k]||'');
+            if(x.tagName==='TEXTAREA')fit(x);
+            go();save();
+          });
+          pop.addEventListener('pointerdown',e=>{if(!e.target.closest('textarea,input,select')){try{document.activeElement.blur()}catch(x){}}},true);
+          let downEl=null,lastAct=0,lastSel=0;
+          pop.addEventListener('change',e=>{lastSel=performance.now();if(e.target.classList.contains('ni'))commitNum(e.target)});
+          /* clavier : la fenêtre remonte pour rester visible, pas de zoom */
+          pop.addEventListener('focusin',e=>{
+            const x=e.target;if(!x.matches||!x.matches('input.ni,textarea'))return;
+            pop.classList.add('kb');
+            setTimeout(()=>{const sc=pop.querySelector('.pc');if(!sc)return;const r=x.getBoundingClientRect(),c=sc.getBoundingClientRect();sc.scrollTop+=r.top-c.top-c.height/3},320);
+          });
+          pop.addEventListener('focusout',()=>{setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches||!a.matches('input.ni,textarea'))pop.classList.remove('kb')},60)});
+          const hit=e=>e.target.closest&&e.target.closest('.tg,.ch,.tab,.irh,#x,#bgp,#bgx,#dcl');
+          function activate(n){
+            const id=n.id;
+            if(id==='bgp')return pickImg();
+            if(id==='bgx')return setBg('');
+            if(id==='dcl')return openDc();
+          BYSG_HTML_END
+      - name: Ecrire chrono.html (4/4)
+        run: |
+          cat >> chrono.html <<'BYSG_HTML_END'
+            if(id==='x')return closePop();
+            if(n.classList.contains('irh')){n.parentNode.classList.toggle('o');return}
+                      if(n.classList.contains('tab'))return showTab(n.dataset.tab);
+            if(n.classList.contains('tg')){const k=n.dataset.k;S[k]=S[k]?0:1;n.setAttribute('aria-pressed',S[k]?'true':'false');go();save();return}
+            if(n.classList.contains('pr')){Object.assign(S,PRE[+n.dataset.p].v);go();save();buildPop();return}
+            if(n.classList.contains('ch')){const g=n.parentNode;S[g.dataset.k]=n.dataset.v;g.querySelectorAll('.ch').forEach(b=>b.classList.toggle('on',b===n));const bl=g.dataset.k==='ifont'&&n.dataset.v==='bold';if(bl){S.icol='#7b86f5';S.ith=0}go();save();if(g.dataset.k==='mode'||bl)buildPop()}
+          }
+          pop.addEventListener('pointerdown',e=>{downEl=hit(e)},true);
+          pop.addEventListener('pointerup',e=>{const n=hit(e);if(n&&n===downEl){lastAct=performance.now();activate(n);e.preventDefault()}downEl=null},true);
+          pop.addEventListener('click',e=>{const n=hit(e);if(!n||performance.now()-lastAct<500)return;activate(n)});
+          ['touchstart','touchend','mousedown','mouseup'].forEach(ev=>pop.addEventListener(ev,e=>e.stopPropagation()));
+          addEventListener('pointerdown',e=>{if(pop.classList.contains('o')&&!pop.contains(e.target)&&performance.now()-lastSel>1000)closePop()});
+          addEventListener('keydown',e=>{
+            if(e.key==='Escape'&&pop.classList.contains('o'))closePop();
+            if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('ni'))e.target.blur();
+          });
+          /* ---------- iOS Timer ---------- */
+          const IF={serif:["'Noto Serif','Libre Baskerville',Georgia,'Times New Roman',serif",400],bold:["'Libre Baskerville','Noto Serif',Georgia,serif",700],din:["'Roboto Condensed','Arial Narrow',Arial,sans-serif",700],sans:["Inter,'Segoe UI',Arial,sans-serif",600],mono:["'Roboto Mono',ui-monospace,Menlo,monospace",500],slab:["'Roboto Slab',Rockwell,Georgia,serif",700]};
+          const ANI={roll:'iro .28s cubic-bezier(.2,.8,.3,1)',fade:'ifa .3s ease',zoom:'izo .3s cubic-bezier(.2,.8,.3,1)'};
+          const PAU='<svg width="23" height="23" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 8v8M14.4 8v8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+          const PLY='<svg width="23" height="23" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 8.2v7.6l6-3.8z" fill="currentColor"/></svg>';
+          let ipv=[],icn='',LD={};
+          const mk=s=>s.split('').map(c=>'<span class="ic'+(c===':'?' co':c==='.'?' dt':'')+'">'+c+'</span>').join('');
+          function iosAct(a){if(a==='rst')reset();else if(a==='tog')toggle();else if(a==='set')openPop()}
+          function fitIos(){
+            const m=$('iom'),d=$('ids'),bd=S.ifont==='bold',F=IF[S.ifont]||IF.serif;
+            m.style.fontFamily=d.style.fontFamily=F[0];m.style.fontWeight=d.style.fontWeight=F[1];
+            m.classList.toggle('bd',bd);d.classList.toggle('bd',bd);
+            m.style.fontSize='40px';m.innerHTML=mk(bd?'00:00:00.0':'00:00:00');
+            const wd=m.getBoundingClientRect().width/(K||1);
+            if(wd)d.style.fontSize=Math.max(18,Math.min(64,40*(bd?208:182)/wd))+'px';
+            if(!LD[S.ifont]&&document.fonts&&document.fonts.load){LD[S.ifont]=1;document.fonts.load(F[1]+' 40px '+F[0]).then(()=>fitIos(),()=>{})}
+          }
+          function paintIos(){
+            if(S.mode!=='ios')return;
+            const dk=matchMedia('(prefers-color-scheme: dark)').matches,tc=S.ith?(dk?'#ffffff':'#000000'):S.icol,bc=S.ith?(dk?'#000000':'#ffffff'):S.ibg,
+            r=parseInt(bc.slice(1,3),16),g=parseInt(bc.slice(3,5),16),b=parseInt(bc.slice(5,7),16),lt=(.2126*r+.7152*g+.0722*b)/255>.5,o=$('ios');
+            o.style.background=bc;o.style.color=tc;o.style.setProperty('--itc',tc);o.style.setProperty('--ib',lt?'rgba(0,0,0,.14)':'rgba(255,255,255,.18)');
+            fitIos();
+          }
+          function renderIos(){
+            if(S.mode!=='ios')return;
+            const t=Math.floor(el/1000),bd=S.ifont==='bold',d=$('ids'),
+            x=p2(Math.floor(t/3600))+':'+p2(Math.floor(t/60)%60)+':'+p2(t%60)+(bd?'.'+(Math.floor(el/100)%10):'');
+            if(ipv.length!==x.length||d.childNodes.length!==x.length){d.innerHTML=mk(x);ipv=x.split('')}
+            else for(let i=0;i<x.length;i++)if(ipv[i]!==x[i]){const n=d.childNodes[i];n.textContent=x[i];ipv[i]=x[i];if(ANI[S.ian]){n.style.animation='none';void n.offsetWidth;n.style.animation=ANI[S.ian]}}
+            const g=S.ilive&&st!=='running'?'g':'p';if(g!==icn){icn=g;$('itg').innerHTML=g==='g'?PLY:PAU}
+          }
+          try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>go())}catch(e){}
+          function buildIos(){
+            const old=pop.querySelector('.ipc'),y=old?old.scrollTop:0;
+            pop.classList.add('ios');
+            const tg=(k,l)=>`<div class="irw"><span>${l}</span><button type="button" class="tg" data-k="${k}" aria-pressed="${S[k]?'true':'false'}" aria-label="${l}"></button></div>`,
+            cr=(k,l)=>`<div class="cp" data-k="${k}"><div class="irw irh"><span>${l}</span><span class="sw"><button type="button" class="cs"></button><i class="chv"></i></span></div><div class="cb"><div class="sv"><i></i></div><input type="range" class="hu" min="0" max="360" value="0"></div></div>`,
+            cards=(k,a,f)=>`<div class="chs" data-k="${k}">${a.map(o=>`<button type="button" class="ch${f?' '+f:''}${S[k]===o[0]?' on':''}" data-v="${o[0]}"${o[2]?` style="font-family:${o[2]};font-weight:${o[3]}"`:''}>${o[1]}</button>`).join('')}</div>`,
+            AN=[['none','<span>13</span><small>Aucune</small>'],['roll','<span class="rl">1<em>4<sub>3</sub></em></span><small>Roulement</small>'],['fade','<span>1<span style="opacity:.45">3</span></span><small>Fondu</small>'],['zoom','<span>1<span style="display:inline-block;transform:scale(1.25)">3</span></span><small>Zoom</small>']],
+            FN=[['serif','Serif'],['bold','Gras'],['din','Condensé'],['sans','Sans'],['mono','Mono'],['slab','Slab']].map(o=>[o[0],'12:58',IF[o[0]][0],IF[o[0]][1]]),
+            MD=[['chrono','Chrono'],['livesplit','LiveSplit'],['ios','iOS Timer'],['none','Texte seul']];
+            pop.innerHTML=`<button type="button" id="x" aria-label="Fermer"></button><div class="ipc">
+            <div class="ig">${tg('ith','Thème du système')}${tg('ilive','Activités en direct')}${cr('icol','Texte')}${cr('ibg','Fond')}</div>
+            <div class="ist">Taille</div>
+            <div class="ig"><div class="irw irl"><span>Taille du timer</span><span class="v" data-vf="isz">${S.isz}%</span></div><input type="range" class="isl" data-k="isz" min="40" max="300" step="1" value="${S.isz}"></div>
+            <div class="ist">Animation</div>${cards('ian',AN)}
+            <div class="ist">Polices</div>${cards('ifont',FN,'f')}
+            <div class="ist">Style du timer</div>${cards('mode',MD,'m')}
+            </div>`;
+            initCp();pop.querySelectorAll('.irh .cs').forEach(b=>b.onclick=null);
+            const n=pop.querySelector('.ipc');if(n)n.scrollTop=y;
+          }
+          buildPop();apply();
+          /* popup de crédits au lancement : entre, reste ~4,5 s, repart toute seule */
+          setTimeout(()=>{const s=$('sp');s.classList.add('in');setTimeout(()=>{s.classList.remove('in');s.classList.add('out')},4500)},500);
+          </script>
+          </body>
+          </html>
+          BYSG_HTML_END
+      - name: Ecrire BYSG.m
+        run: |
+          cat > BYSG.m <<'BYSG_M_END'
+          // BYSG overlay : WKWebView transparent qui ne capte les touches QUE sur le timer
+          #import <UIKit/UIKit.h>
+          #import <WebKit/WebKit.h>
+          #import <PhotosUI/PhotosUI.h>
+          #include <mach/mach_time.h>
+          #include <time.h>
+          #include "fishhook.h"
+          #include "chrono_html.h"
+
+          static BOOL gStretch = NO, gGray = NO;
+          static CGFloat gPct = 1.0, gRW = 1440, gRH = 1080;
+          static UIView *grayView;
+
+          // ---------- Vitesse du jeu (speed hack) ----------
+          // On intercepte les horloges du système (mach_absolute_time, clock_gettime, clock_gettime_nsec_np) avec fishhook
+          // et on les accélère / ralentit. À chaque changement de vitesse, on ré-ancre l'horloge pour éviter tout saut dans le temps.
+          static double gSpeed = 1.0;
+          typedef struct { uint64_t r, v; } Anc;
+          static Anc aM, aC[16];
+          static uint64_t (*o_mach)(void);
+          static int (*o_cgt)(clockid_t, struct timespec *);
+          static uint64_t (*o_cgtn)(clockid_t);
+          static inline uint64_t scl(Anc a, uint64_t real) { return a.v + (uint64_t)((double)(real - a.r) * gSpeed); }
+          static inline BOOL mono(clockid_t c) { return c == CLOCK_MONOTONIC || c == CLOCK_MONOTONIC_RAW || c == CLOCK_UPTIME_RAW; }
+          static uint64_t h_mach(void) { return scl(aM, o_mach()); }
+          static int h_cgt(clockid_t c, struct timespec *t) {
+            int r = o_cgt(c, t);
+            if (r == 0 && t && mono(c)) {
+              uint64_t n = scl(aC[(int)c], (uint64_t)t->tv_sec * 1000000000ull + (uint64_t)t->tv_nsec);
+              t->tv_sec = (time_t)(n / 1000000000ull);
+              t->tv_nsec = (long)(n % 1000000000ull);
+            }
+            return r;
+          }
+          static uint64_t h_cgtn(clockid_t c) { uint64_t n = o_cgtn(c); return mono(c) ? scl(aC[(int)c], n) : n; }
+          static void bysgSetSpeed(double s) {
+            if (s < 0.1) { s = 0.1; }
+            if (s > 10.0) { s = 10.0; }
+            if (o_mach) { uint64_t rm = o_mach(); aM = (Anc){ rm, scl(aM, rm) }; }
+            if (o_cgt) {
+              clockid_t ids[3] = { CLOCK_MONOTONIC, CLOCK_MONOTONIC_RAW, CLOCK_UPTIME_RAW };
+              for (int i = 0; i < 3; i++) {
+                struct timespec t;
+                if (o_cgt(ids[i], &t) == 0) {
+                  uint64_t n = (uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec;
+                  aC[(int)ids[i]] = (Anc){ n, scl(aC[(int)ids[i]], n) };
+                }
+              }
+            }
+            gSpeed = s;
+          }
+          static void bysgInstallTime(void) {
+            struct rebinding rb[3] = {
+              { "mach_absolute_time", (void *)h_mach, (void **)&o_mach },
+              { "clock_gettime", (void *)h_cgt, (void **)&o_cgt },
+              { "clock_gettime_nsec_np", (void *)h_cgtn, (void **)&o_cgtn }
+            };
+            rebind_symbols(rb, 3);
+          }
+
+          // ---------- Résolution étirée ----------
+          // Façon PC : on choisit une résolution (ex. 1440x1080), elle est adaptée aux pixels réels du téléphone
+          // (jamais plus grande que l'écran, orientation respectée), le jeu est rendu dans cette résolution puis étiré plein écran.
+          // Le curseur va de 0 % (écran normal) à 100 % (résolution choisie).
+          static void bysgStretch(UIWindow *w) {
+            UIView *gv = w.rootViewController.view;
+            if (!gv) return;
+            CGSize sb = w.bounds.size;
+            CGFloat sc = UIScreen.mainScreen.nativeScale, tw = sb.width, th = sb.height;
+            if (gStretch && gPct >= 0.01) {
+              CGFloat spw = sb.width * sc, sph = sb.height * sc;
+              CGFloat lg = MAX(gRW, gRH), sh = MIN(gRW, gRH);
+              CGFloat k = MIN(1.0, MIN(MAX(spw, sph) / lg, MIN(spw, sph) / sh));
+              BOOL land = sb.width > sb.height;
+              CGFloat rw = (land ? lg : sh) * k, rh = (land ? sh : lg) * k;
+              tw = (spw + (rw - spw) * gPct) / sc;
+              th = (sph + (rh - sph) * gPct) / sc;
+            }
+            if (fabs(tw - sb.width) < 0.5 && fabs(th - sb.height) < 0.5) {
+              if (!CGAffineTransformIsIdentity(gv.transform)) { gv.transform = CGAffineTransformIdentity; gv.frame = w.bounds; }
+              return;
+            }
+            if (fabs(gv.bounds.size.width - tw) < 0.5 && fabs(gv.bounds.size.height - th) < 0.5 && !CGAffineTransformIsIdentity(gv.transform)) return;
+            gv.transform = CGAffineTransformIdentity;
+            gv.bounds = CGRectMake(0, 0, tw, th);
+            gv.center = CGPointMake(sb.width / 2, sb.height / 2);
+            gv.transform = CGAffineTransformMakeScale(sb.width / tw, sb.height / th);
+          }
+
+          // ---------- Noir et blanc ----------
+          // Une vue blanche en mode de fusion "saturation" posée au-dessus du jeu (sous le timer, qui garde ses couleurs)
+          static void bysgGray(UIWindow *w) {
+            if (!gGray) { if (grayView.superview) [grayView removeFromSuperview]; return; }
+            if (!grayView) {
+              grayView = [[UIView alloc] initWithFrame:w.bounds];
+              grayView.userInteractionEnabled = NO;
+              grayView.backgroundColor = UIColor.whiteColor;
+              grayView.layer.compositingFilter = @"saturationBlendMode";
+              grayView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+            }
+            if (grayView.superview != w) [w addSubview:grayView];
+            grayView.frame = w.bounds;
+          }
+
+          static UIViewController *topVC(UIWindow *w) {
+            UIViewController *v = w.rootViewController;
+            while (v.presentedViewController) v = v.presentedViewController;
+            return v;
+          }
+
+          @interface BYSGHost : UIView <WKScriptMessageHandler, UIScrollViewDelegate, PHPickerViewControllerDelegate>
+          @property(nonatomic, strong) NSArray<NSValue *> *holes;
+          @property(nonatomic, strong) WKWebView *web;
+          @end
+
+          @implementation BYSGHost
+          - (instancetype)initWithFrame:(CGRect)f {
+            if ((self = [super initWithFrame:f])) {
+              self.backgroundColor = UIColor.clearColor;
+              self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+              WKWebViewConfiguration *cfg = [WKWebViewConfiguration new];
+              [cfg.userContentController addScriptMessageHandler:self name:@"r"];
+              [cfg.userContentController addScriptMessageHandler:self name:@"n"];
+              self.web = [[WKWebView alloc] initWithFrame:self.bounds configuration:cfg];
+              self.web.autoresizingMask = self.autoresizingMask;
+              self.web.opaque = NO;
+              self.web.backgroundColor = UIColor.clearColor;
+              self.web.scrollView.backgroundColor = UIColor.clearColor;
+              self.web.scrollView.scrollEnabled = NO;
+              self.web.scrollView.delegate = self;
+              self.web.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+              [self addSubview:self.web];
+              [self.web loadHTMLString:[NSString stringWithUTF8String:CHRONO_HTML]
+                               baseURL:[NSURL URLWithString:@"https://bysg.local/"]];
+            }
+            return self;
+          }
+          // Hors du timer : on renvoie nil => la touche passe au jeu (plus de carré invisible)
+          - (UIView *)hitTest:(CGPoint)p withEvent:(UIEvent *)e {
+            for (NSValue *v in self.holes)
+              if (CGRectContainsPoint(CGRectInset(v.CGRectValue, -4, -4), p)) return [super hitTest:p withEvent:e];
+            return nil;
+          }
+          // Sélecteur de photo natif (PHPicker, aucune permission requise)
+          - (void)pickPhoto {
+            UIWindow *w = self.window;
+            if (!w) return;
+            PHPickerConfiguration *c = [[PHPickerConfiguration alloc] init];
+            c.filter = [PHPickerFilter imagesFilter];
+            c.selectionLimit = 1;
+            PHPickerViewController *p = [[PHPickerViewController alloc] initWithConfiguration:c];
+            p.delegate = self;
+            self.hidden = YES; // l'overlay ne doit pas couvrir le sélecteur
+            [topVC(w) presentViewController:p animated:YES completion:nil];
+          }
+          - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results {
+            [picker dismissViewControllerAnimated:YES completion:nil];
+            self.hidden = NO;
+            PHPickerResult *r = results.firstObject;
+            if (!r || ![r.itemProvider canLoadObjectOfClass:UIImage.class]) return;
+            __weak BYSGHost *ws = self;
+            [r.itemProvider loadObjectOfClass:UIImage.class completionHandler:^(id<NSItemProviderReading> obj, NSError *err) {
+              UIImage *im = (UIImage *)obj;
+              if (![im isKindOfClass:UIImage.class]) return;
+              CGFloat k = MIN(1.0, 900.0 / MAX(im.size.width, im.size.height));
+              CGSize ns = CGSizeMake(floor(im.size.width * k), floor(im.size.height * k));
+              UIGraphicsImageRendererFormat *fmt = [UIGraphicsImageRendererFormat defaultFormat];
+              fmt.scale = 1;
+              UIImage *sm = [[[UIGraphicsImageRenderer alloc] initWithSize:ns format:fmt] imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+                [im drawInRect:CGRectMake(0, 0, ns.width, ns.height)];
+              }];
+              NSData *d = UIImageJPEGRepresentation(sm, 0.82);
+              if (!d) return;
+              NSString *js = [NSString stringWithFormat:@"setBg('data:image/jpeg;base64,%@')", [d base64EncodedStringWithOptions:0]];
+              dispatch_async(dispatch_get_main_queue(), ^{ [ws.web evaluateJavaScript:js completionHandler:nil]; });
+            }];
+          }
+          - (void)userContentController:(WKUserContentController *)c didReceiveScriptMessage:(WKScriptMessage *)m {
+            if ([m.name isEqualToString:@"n"]) {
+              NSDictionary *d = m.body;
+              if (![d isKindOfClass:NSDictionary.class]) return;
+              if (d[@"s"] != nil) {
+                gStretch = [d[@"s"] boolValue];
+                if (d[@"p"] != nil) gPct = fmax(0, fmin(100, [d[@"p"] doubleValue])) / 100.0;
+                if (d[@"w"] != nil) gRW = fmax(200, fmin(8000, [d[@"w"] doubleValue]));
+                if (d[@"h"] != nil) gRH = fmax(200, fmin(8000, [d[@"h"] doubleValue]));
+                [self.web evaluateJavaScript:[NSString stringWithFormat:@"window.NS=%f;if(window.inf)inf()", UIScreen.mainScreen.nativeScale] completionHandler:nil];
+                if (self.window) bysgStretch(self.window);
+              }
+              if (d[@"g"] != nil) { gGray = [d[@"g"] boolValue]; if (self.window) bysgGray(self.window); }
+              if (d[@"v"] != nil) bysgSetSpeed([d[@"v"] doubleValue]);
+              if (d[@"pk"] != nil) { [self pickPhoto]; return; }
+              NSString *u = d[@"o"];
+              if ([u isKindOfClass:NSString.class] && [u hasPrefix:@"https://discord.gg/"])
+                [UIApplication.sharedApplication openURL:[NSURL URLWithString:u] options:@{} completionHandler:nil];
+              return;
+            }
+            NSArray *a = m.body;
+            if (![a isKindOfClass:NSArray.class]) return;
+            NSMutableArray *h = [NSMutableArray array];
+            for (NSArray *r in a)
+              if ([r isKindOfClass:NSArray.class] && r.count >= 4)
+                [h addObject:[NSValue valueWithCGRect:CGRectMake([r[0] doubleValue], [r[1] doubleValue], [r[2] doubleValue], [r[3] doubleValue])]];
+            self.holes = h;
+          }
+          - (void)scrollViewDidScroll:(UIScrollView *)sv {
+            if (sv.contentOffset.x != 0 || sv.contentOffset.y != 0) sv.contentOffset = CGPointZero;
+          }
+          @end
+
+          static BYSGHost *host;
+
+          static UIWindow *keyWin(void) {
+            for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
+              if ([s isKindOfClass:UIWindowScene.class] && s.activationState == UISceneActivationStateForegroundActive)
+                for (UIWindow *w in ((UIWindowScene *)s).windows)
+                  if (w.isKeyWindow) return w;
+            return nil;
+          }
+
+          __attribute__((constructor)) static void bysg_init(void) {
+            bysgInstallTime();
+            dispatch_async(dispatch_get_main_queue(), ^{
+              [NSTimer scheduledTimerWithTimeInterval:0.1 repeats:YES block:^(NSTimer *t) {
+                UIWindow *w = keyWin();
+                if (!w) return;
+                bysgStretch(w);
+                if (!host) host = [[BYSGHost alloc] initWithFrame:w.bounds];
+                if (host.superview != w) [w addSubview:host];
+                bysgGray(w);
+                if (!host.hidden && host.superview == w) {
+                  NSArray *sv = w.subviews;
+                  BOOL ok = sv.lastObject == host && (!gGray || (sv.count > 1 && sv[sv.count - 2] == grayView));
+                  if (!ok) { if (gGray) [w bringSubviewToFront:grayView]; [w bringSubviewToFront:host]; }
+                }
+              }];
+            });
+          }
+          BYSG_M_END
+      - name: Generer chrono_html.h
+        run: |
+          python3 -c "import json;open('chrono_html.h','w',encoding='utf-8').write('static const char *CHRONO_HTML = '+json.dumps(open('chrono.html',encoding='utf-8').read(),ensure_ascii=False)+';')"
+      - name: Recuperer fishhook
+        run: |
+          for b in main master; do
+            curl -fsSL -o fishhook.c "https://raw.githubusercontent.com/facebook/fishhook/$b/fishhook.c" && curl -fsSL -o fishhook.h "https://raw.githubusercontent.com/facebook/fishhook/$b/fishhook.h" && break
+          done
+          test -s fishhook.c && test -s fishhook.h
+      - name: Compiler le dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=14.0 -fobjc-arc -dynamiclib -framework UIKit -framework WebKit -framework PhotosUI -framework Foundation -framework CoreGraphics -install_name @rpath/BYSG.dylib -o BYSG.dylib BYSG.m fishhook.c
+          codesign -f -s - BYSG.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BYSG-dylib
+          path: BYSG.dylib
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: BYSG dylib
+          files: BYSG.dylib
